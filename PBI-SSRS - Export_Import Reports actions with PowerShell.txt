@@ -1,0 +1,62 @@
+Cela ne fonctionne que pour les pagined reports (rapport pbi, pas un dashboard, qui est fait avec Report Builder qui peut être utlisé avec SSRS. Alors qu'un rapport PowerBI c'est un dashboard et ça ne peut être utilisé qu'avec PowerBI Desktop. Ce n'est pas fait avec le même outils) SSRS ne supporte que les reports pagined (.rdl) et les dashborad sont des .pbx
+Mais ce sera peut-être mieux avec des versions plus récentes du package PowerShell.
+
+Il faut :
+Télécharger rapports paginés
+			les permissions
+			les subscriptions
+Rapports paginés :
+Functions\CatalogItems\Out-RsFolderContent.ps1
+Functions\CatalogItems\Write-RsFolderContent.ps1
+
+Permissions :
+Functions\Security\Get-RsCatalogItemRole.ps1
+Functions\Security\Grant-RsCatalogItemRole.ps1
+
+--Get-RsCatalogItemRole -ReportServerUri 'http://localhost/reportserver' -path '/ESGRM/' -Recurse
+
+Subscriptions : il va créer un ficher XML
+Functions\CatalogItems\Copy-RsSubscription.ps1
+Functions\CatalogItems\Export-RsSubscriptionXml.ps1
+
+On trouve la liste des fonctions dans FileList et avec leurs différents paramètres
+
+Télécharger le dossier du module (le dézipper si besoin).
+https://www.powershellgallery.com/packages/ReportingServicesTools
+Cliquer sur "Manual download", télécharger le nupkg et le renommer en .zip
+Le placer ici : C:\Windows\System32\WindowsPowerShell\v1.0\Modules (c'est pas obligatoire, on peut le mettre ailleurs)
+Lancer Powershell en mode admin
+Exécuter :   Install-Module -Name ReportingServicesTools
+
+Il est possible qu'il demande une version plus récente de Nuget mais ça fonctionne quand même sans le faire.
+
+A cause de la sécurité, si on lance l'export, il va nous emmerder. Il faut dire que les fichiers dans le dossier ReportingServicesTools sont fiables.
+Via PowerShell, il faut aller dans le dossier ReportingServicesTools
+Faire cd.. 2 fois puis :
+cd Windows\System32\WindowsPowerShell\v1.0\Modules\ReportingServicesTools
+Ensuite, exécuter get-childitem * -recurse *.ps1 | unblock-file
+
+Ensuite, exécuter cette commande :
+out-RsFolderContent -ReportServerUri 'http://localhost/reportserver' -RsFolder /MyFolder -Destination C:\temp\MonthlyReports -Recurse
+Le paramètre Recurse, c'est pour dire qu'on veut tous les folders et subfolders
+
+L'URL qu'il faut mettre, c'est pour se trouver dans le mode "fileexplorer" et pas graphique pour voir ce genre :
+
+localhost/ReportServer - /MyFolder
+[To Parent Directory]
+       Monday, August 23, 2021 3:21 PM        <dir> Admin
+      Thursday, August 6, 2020 3:59 PM       <pbix> Coal Exclusion
+      Friday, January 15, 2021 2:31 PM        <dir> Data Source
+      Friday, January 15, 2021 5:33 PM        <dir> Universe
+       Thursday, July 23, 2020 2:46 PM         <ds> BI
+	   
+IMPORT :
+Write-RsFolderContent -ReportServerUri 'http://localhost/reportserver' -Path D:\PowerBITemp\ESGRM_Reports -RsFolder /MyFolder -recurse -overwrite
+Si il n'y a pas de datasource qui porte le même nom qu'à l'origine, alors il faudra modifier chacun des rapports et mettre la datasource
+On aura ce message si on ouvre le rapport : The report server cannot process the report or shared dataset. The shared data source 'le_nom_de_la_datasource' for the report server is not valid. Browse to the server or site and select a shared data source. (rsInvalidDataSourceReference)
+!!!!!!!!ATTENTION!!!!!!!! : Il ne copie pas la sécurité
+
+
+Edit subscription owner
+Get-RsSubscription -ReportServerUri 'http://localhost/reportserver' -path '/DWH/XXXX/demande-Service-inf-10j' | Set-RsSubscription -Owner "Domain\user111"
+Get-RsSubscription -ReportServerUri 'http://localhost/reportserver' -path '/DWH' | Set-RsSubscription -Owner "Domain\user111"

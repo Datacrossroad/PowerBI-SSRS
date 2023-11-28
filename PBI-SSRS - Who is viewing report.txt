@@ -1,0 +1,50 @@
+https://www.mssqltips.com/sqlservertip/3060/determining-who-is-viewing-reports-in-sql-server-2012-reporting-services/
+
+USE [ReportServer];
+GO
+SELECT el2.username, 
+el2.InstanceName, 
+el2.ReportPath, 
+el2.TimeStart, 
+el2.TimeEnd, 
+el2.[Status],
+isnull(el2.Parameters, 'N/A') as Parameters 
+FROM ExecutionLog2 el2
+GO
+
+USE [ReportServer];
+GO
+SELECT username, ReportPath, count(*) as ViewCount
+FROM ExecutionLog2
+WHERE status='rsSuccess'
+AND TimeEnd>=DATEADD(mm, DATEDIFF(mm, 0, GETDATE()), 0)
+GROUP BY username, ReportPath
+ORDER BY username, ViewCount desc
+GO
+
+USE [ReportServer];
+GO
+SELECT username, convert(varchar(25),TimeEnd, 120) as AccessTime
+FROM ExecutionLog2
+WHERE status='rsSuccess'
+--AND username='STAFF\user01' 
+--AND ReportPath='/Sales/YTDSalesByProductCategory'
+ORDER BY AccessTime desc
+GO
+
+USE [ReportServer];
+GO
+SELECT el2.username, 
+el2.InstanceName, 
+el2.ReportPath, 
+el2.TimeStart, 
+el2.TimeEnd, 
+el2.[Status],
+isnull(el2.Parameters, 'N/A') as Parameters 
+FROM ExecutionLog2 el2
+WHERE el2.[Status] = 'rsSuccess'
+--AND username='STAFF\user01' 
+  AND ReportPath like'/PEGASE%'
+ORDER BY el2.TimeStart desc
+GO
+

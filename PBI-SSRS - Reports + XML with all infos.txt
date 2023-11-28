@@ -1,0 +1,9 @@
+SELECT 
+C.Name
+,c.Path
+,CONVERT(XML,CONVERT(VARBINARY(MAX),C.Content)) AS reportXML
+,C.Content
+FROM  ReportServer.dbo.Catalog C
+WHERE  C.Content is not null
+AND  C.Type = 2
+

@@ -1,0 +1,35 @@
+/*
+The first useful table within ReportServer is dbo.Catalog.  This table contains 1 row for every object found on the SSRS site.  This includes a row for each folder, report, data source, image, and linked report.  The primary key and clustered index for the table is ItemID and it is a GUID.  The user columns are also a GUID and can be converted to a name by joining to the dbo.Users table.
+Depending on the version of SSRS not all type values may be available.
+*/
+SELECT
+  ItemID -- Unique Identifier
+, [Path] --Path including object name
+, [Name] --Just the objectd name
+, ParentID --The ItemID of the folder in which it resides
+, CASE [Type] --Type, an int which can be converted using this case statement.
+    WHEN 1 THEN 'Folder'
+    WHEN 2 THEN 'Report'
+    WHEN 3 THEN 'File'
+    WHEN 4 THEN 'Linked Report'
+    WHEN 5 THEN 'Data Source'
+    WHEN 6 THEN 'Report Model - Rare'
+    WHEN 7 THEN 'Report Part - Rare'
+    WHEN 8 THEN 'Shared Data Set - Rare'
+    WHEN 9 THEN 'Image'
+    ELSE CAST(Type as varchar(100))
+  END AS TypeName
+--, content
+, LinkSourceID --If a linked report then this is the ItemID of the actual report.
+, [Description] --This is the same information as can be found in the GUI
+, [Hidden] --Is the object hidden on the screen or not
+, CreatedBy.UserName CreatedBy
+, CreationDate
+, ModifiedBy.UserName ModifiedBy
+, ModifiedDate
+FROM 
+  ReportServer.dbo.[Catalog] CTG
+    INNER JOIN 
+  ReportServer.dbo.Users CreatedBy ON CTG.CreatedByID = CreatedBy.UserID
+    INNER JOIN
+  ReportServer.dbo.Users ModifiedBy ON CTG.ModifiedByID = ModifiedBy.UserID;
